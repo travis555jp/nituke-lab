@@ -1,1 +1,324 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>煮付けラボ</title><style>*{box-sizing:border-box}body{margin:0;background:#f4f2ec;color:#20231f;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;line-height:1.5}main{max-width:760px;margin:auto;padding:22px 14px 105px}h1{margin:0 0 6px;font-size:34px}h2{font-size:18px;margin:0 0 10px}.muted{color:#68706a;font-size:13px}.card{background:#fff;border:1px solid #dddcd5;border-radius:18px;padding:15px;margin-top:12px}select,input[type=search]{width:100%;font-size:16px;padding:12px;border:1px solid #dddcd5;border-radius:12px;background:#fff}.layer{margin-top:18px;padding-top:15px;border-top:1px solid #ecebe5}.layer:first-of-type{border-top:0;padding-top:0}.lt{font-weight:900}.num{display:inline-grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#e8f0ec;color:#285f50;margin-right:6px}.chips{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.chip{border:1px solid #dddcd5;border-radius:12px;background:#fafaf7;overflow:hidden}.chip input{position:absolute;opacity:0}.chip span{display:block;min-height:51px;padding:8px 10px;font-weight:700}.chip small{display:block;font-weight:400;color:#68706a;font-size:11px}.chip input:checked+span{background:#285f50;color:#fff}.chip input:checked+span small{color:#dce8e3}.bar{position:fixed;left:0;right:0;bottom:0;background:#f4f2ecef;border-top:1px solid #ddd;padding:10px 14px calc(env(safe-area-inset-bottom) + 10px)}.bar div{max-width:760px;margin:auto;display:grid;grid-template-columns:1fr auto;gap:8px}.bar button{min-height:50px;border:0;border-radius:14px;font-size:16px;font-weight:800;padding:0 18px}.go{background:#285f50;color:#fff}.clear{background:#e5e4df}.result{display:none}.result.show{display:block}.score{font-size:38px;font-weight:900;color:#285f50}.scores{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}.mini{border:1px solid #dddcd5;border-radius:12px;padding:9px;text-align:center}.mini b{display:block;font-size:20px}.mini small{font-size:10px;color:#68706a}.item,.flavor,.step{border:1px solid #dddcd5;border-radius:12px;padding:10px;margin-top:8px}.badge{float:right;background:#e8f0ec;color:#285f50;border-radius:999px;padding:3px 8px;font-size:12px}.sec{margin-top:17px}.sec h3{font-size:14px}.hidden{display:none!important}@media(min-width:600px){.chips{grid-template-columns:repeat(3,1fr)}}</style></head><body><main><h1>煮付けラボ</h1><div class="muted">Ver.4／3レイヤー設計：煮汁を受ける → 煮汁を作る → 仕上げる</div><section class="card"><h2>魚と方向性</h2><select id="fish"><option>サバ</option><option>ブリ</option><option>鯛</option><option>タラ</option><option>カレイ</option><option>金目鯛</option><option>鮭</option><option>サワラ</option><option>アジ</option><option>イワシ</option><option>サンマ</option><option>メカジキ</option><option>メバル</option><option>カサゴ</option><option>ヒラメ</option></select><br><br><select id="mood"><option>おまかせ</option><option>さっぱり</option><option>ご飯に合う</option><option>酒に合う</option><option>甘くない</option><option>こってり</option><option>洋風</option><option>アジアン</option></select></section><section class="card"><h2>料理を3層で組み立てる</h2><input id="search" type="search" placeholder="全素材から絞り込み"><div class="layer"><div class="lt"><span class="num">1</span>煮汁を受ける</div><div class="muted">魚の旨味・脂・煮汁を含ませる素材</div><div class="chips" id="r"></div></div><div class="layer"><div class="lt"><span class="num">2</span>煮汁を作る</div><div class="muted">旨味・甘味・酸味・発酵・香りで煮汁を設計</div><div class="chips" id="b"></div></div><div class="layer"><div class="lt"><span class="num">3</span>仕上げる</div><div class="muted">酸味・香り・辛味・食感で最後の輪郭を作る</div><div class="chips" id="g"></div></div></section><section class="card result" id="result"><div id="out"></div></section></main><div class="bar"><div><button type="button" class="go" id="go">料理を分析</button><button type="button" class="clear" id="clear">クリア</button></div></div><script>var F={"サバ":[5,5,5,3,8],"ブリ":[5,4,4,4,9],"鯛":[2,3,2,4,8],"タラ":[1,2,2,2,7],"カレイ":[2,3,2,5,8],"金目鯛":[4,4,3,5,9],"鮭":[4,4,3,2,8],"サワラ":[3,3,2,2,7],"アジ":[3,4,4,2,7],"イワシ":[4,5,5,3,6],"サンマ":[5,4,5,2,7],"メカジキ":[3,3,2,1,9],"メバル":[2,4,2,5,9],"カサゴ":[2,4,3,5,9],"ヒラメ":[1,3,1,4,7]};var R={"大根":[5,3,3,2,1,18,"吸う"],"かぶ":[4,2,4,2,1,10,"淡い"],"茄子":[5,5,2,2,1,9,"脂を吸う"],"白菜":[5,4,4,2,1,8,"甘味"],"じゃがいも":[3,3,3,2,1,16,"ボディ"],"里芋":[4,3,3,2,1,17,"とろみ"],"れんこん":[3,2,3,2,2,14,"食感"],"冬瓜":[5,2,2,1,1,13,"吸う"],"豆腐":[5,3,1,2,1,5,"吸う"],"厚揚げ":[4,4,1,3,2,7,"コク"],"キャベツ":[4,4,5,2,1,8,"甘味"],"にんじん":[2,2,5,2,2,15,"甘味"],"ピーマン":[3,4,2,2,4,5,"青い香り"],"ズッキーニ":[4,4,2,2,1,7,"吸う"],"たけのこ":[2,2,2,3,3,10,"食感"],"小松菜":[3,3,2,2,2,3,"青菜"],"長芋":[3,2,2,2,1,8,"食感"],"こんにゃく":[3,1,0,0,1,12,"食感"],"オクラ":[2,2,1,2,1,3,"とろみ"],"ゴーヤ":[2,2,0,1,5,5,"苦味"],"はんぺん":[4,2,2,3,1,3,"吸う"],"モロヘイヤ":[3,2,1,2,2,2,"とろみ"],"エリンギ":[2,2,1,3,2,8,"食感"],"チンゲン菜":[3,3,3,2,2,5,"青菜"],"もやし":[4,2,1,1,1,3,"食感"],"レタス":[3,2,2,1,1,2,"軽さ"],"油揚げ":[5,5,1,3,2,5,"吸う・コク"],"車麩":[5,3,2,2,1,9,"吸う"],"焼き麩":[5,2,2,2,1,4,"吸う"],"春雨":[5,2,1,1,1,5,"吸う"],"餅":[3,2,4,1,1,8,"ボディ"],"卵":[2,3,2,3,1,6,"まろやか"],"ゆで卵":[3,3,2,3,1,8,"味を含む"]};var B={"玉ねぎ":[3,5,1,3,0,0,1,3,2,4,"前半","甘味"],"長ねぎ":[2,4,1,4,0,0,2,5,2,2,"前半","甘味・香味"],"ごぼう":[3,2,0,5,0,0,1,5,1,1,"前半","土の香り"],"トマト":[5,3,5,4,0,0,4,1,4,5,"中盤","酸味・旨味"],"しいたけ":[5,1,0,4,0,0,1,5,2,3,"前半","旨味・香り"],"まいたけ":[5,1,0,5,0,0,1,4,2,4,"前半","旨味・香り"],"えのき":[4,1,0,2,0,0,1,4,2,3,"中盤","旨味・とろみ"],"しめじ":[4,1,0,3,0,0,1,4,2,4,"前半","旨味"],"干し椎茸":[5,2,0,5,0,0,1,5,2,2,"最初","濃い旨味"],"セロリ":[2,2,1,5,0,0,3,1,3,5,"前半","香味"],"にんにく":[2,1,0,5,0,0,2,2,5,5,"前半","香味"],"生姜":[1,1,0,5,0,0,4,5,4,2,"前半","香味"],"昆布":[5,1,0,2,1,0,0,5,1,1,"最初","だし・旨味"],"塩昆布":[5,1,0,3,5,0,1,5,1,1,"後半","塩味・旨味"],"キムチ":[4,2,4,5,4,5,4,1,5,1,"後半","発酵・辛味"],"納豆":[5,1,1,5,1,5,1,5,2,1,"仕上げ〜弱火","発酵・旨味"],"梅干し":[2,1,5,4,4,2,5,5,2,1,"中盤","酸味・塩味"],"ザーサイ":[3,1,2,4,4,3,2,2,5,1,"後半","塩味・発酵"],"高菜漬け":[3,1,2,4,4,4,2,4,3,1,"後半","発酵・塩味"],"豆豉":[5,1,1,5,5,5,1,1,5,1,"前半少量","発酵・塩味"],"豆板醤":[2,1,2,5,4,4,3,1,5,1,"前半少量","辛味・発酵"],"コチュジャン":[3,3,2,4,4,4,2,1,4,1,"中盤","甘辛・発酵"],"味噌":[5,2,1,4,4,4,1,5,1,1,"後半","旨味・発酵"],"白味噌":[4,5,1,3,3,3,1,5,1,1,"後半","甘味・発酵"],"酒粕":[4,3,2,5,1,5,1,5,1,1,"後半","発酵・香り"],"甘酒":[3,5,1,2,1,3,1,5,1,1,"中盤","甘味・発酵"],"ナンプラー":[5,1,1,5,5,5,2,1,5,1,"中盤少量","魚醤・発酵"],"オイスターソース":[5,3,1,4,4,2,1,1,4,1,"中盤少量","旨味・コク"],"ココナッツミルク":[2,4,1,4,0,0,1,1,5,2,"後半","コク・甘い香り"],"ヨーグルト":[2,2,4,3,0,3,3,1,2,4,"後半弱火","酸味・乳酸"],"あさり":[5,1,1,4,2,0,1,2,3,5,"前半","貝旨味"],"しじみ":[5,1,1,3,2,0,1,4,2,3,"前半","貝旨味"],"桜えび":[5,2,0,5,2,0,1,4,3,2,"前半少量","甲殻類旨味"],"干しえび":[5,1,0,5,4,0,1,2,5,2,"前半少量","甲殻類旨味"],"わかめ":[3,1,0,3,2,1,1,5,2,1,"後半","海藻旨味"],"ひじき":[3,1,1,3,3,0,1,5,1,1,"中盤","海藻・食感"],"もずく":[2,1,4,2,2,2,4,4,2,1,"仕上げ","酸味・海藻"],"めかぶ":[3,1,1,3,2,1,1,5,2,1,"仕上げ","海藻・とろみ"]};var G={"海苔":[1,3,5,0,0,2,5,2,1,"仕上げ","磯香・旨味"],"とろろ昆布":[1,2,3,0,1,3,5,1,1,"仕上げ","旨味・とろみ"],"青のり":[1,3,5,0,0,1,5,2,1,"仕上げ","磯香"],"青ねぎ":[2,4,4,1,0,3,5,3,1,"仕上げ","青い香り"],"大葉":[3,5,5,0,0,2,5,2,1,"仕上げ","爽やか"],"みょうが":[4,5,5,1,0,3,5,3,1,"仕上げ","爽やか・辛味"],"三つ葉":[2,4,5,0,0,2,5,1,1,"仕上げ","和の香り"],"柚子皮":[3,5,5,0,2,1,5,2,2,"仕上げ","柑橘香"],"すだち":[5,5,4,0,5,1,5,2,1,"仕上げ","酸味・柑橘"],"レモン":[5,5,4,0,5,1,2,3,5,"仕上げ","酸味・柑橘"],"ライム":[5,5,5,0,5,1,1,5,3,"仕上げ","酸味・柑橘"],"オレンジ皮":[2,4,5,0,2,1,1,2,5,"仕上げ","甘い柑橘香"],"パクチー":[2,5,5,0,0,2,1,5,1,"仕上げ","アジアン香"],"ミント":[4,5,5,0,0,2,1,5,3,"仕上げ","清涼感"],"タイバジル":[2,4,5,1,0,2,1,5,3,"仕上げ","甘い香り"],"ディル":[3,5,5,0,0,2,1,2,5,"仕上げ","ハーブ"],"タイム":[1,3,5,0,0,1,1,1,5,"仕上げ少量","ハーブ"],"パセリ":[1,4,4,0,0,2,1,1,5,"仕上げ","ハーブ"],"粉山椒":[4,3,5,4,0,1,5,2,1,"仕上げ","痺れ・香り"],"花椒":[4,3,5,5,0,1,1,5,1,"仕上げ","痺れ・香り"],"黒胡椒":[2,2,4,4,0,1,1,2,5,"仕上げ","辛味・香り"],"白胡椒":[1,2,3,3,0,1,2,3,4,"仕上げ","辛味"],"唐辛子":[3,2,3,5,0,1,3,5,2,"仕上げ/中盤","辛味"],"七味":[3,3,5,4,0,2,5,2,1,"仕上げ","複合香辛料"],"クミン":[2,2,5,1,0,1,1,4,4,"仕上げ少量","スパイス"],"白ごま":[1,1,3,0,0,4,4,3,1,"仕上げ","香ばしさ"],"フライドオニオン":[1,1,4,0,0,5,1,5,4,"仕上げ","香ばしさ・食感"]};var A={"ブリ|大根":97,"鯛|かぶ":95,"サバ|茄子":94,"タラ|白菜":91,"タラ|じゃがいも":90,"鮭|キャベツ":92,"金目鯛|大根":96,"メバル|豆腐":92,"カサゴ|大根":93,"サワラ|かぶ":91,"アジ|茄子":91,"サンマ|大根":92,"鯛|冬瓜":93,"鯛|白菜":90,"ブリ|里芋":91,"カレイ|豆腐":93,"鮭|じゃがいも":91,"サバ|大根":91,"ヒラメ|かぶ":92};var FL=[["王道・甘辛醤油","醤油・酒・みりん・砂糖。魚の旨味を受けた煮汁を素材に含ませる基準の味。","jp"],["甘さ控えめ・醤油酒生姜","醤油・酒・生姜を軸に甘味を控える。","jp"],["生姜強め・甘辛醤油","王道甘辛に生姜を強めに効かせる。","jp"],["塩・酒・柑橘","魚の出汁を前に出し、最後の酸味で締める。","light"],["黒酢・生姜・醤油","脂を黒酢で切り、生姜で香りを整える。","light"],["味噌・生姜","旨味とコクを足し、根菜や豆腐にも味を渡す。","rich"],["トマト・白だし","酸味と旨味を重ね、魚の脂を軽くまとめる。","west"],["薄口醤油・昆布・山椒","繊細な白身を壊さず旨味と香りを補う。","light"],["白ワイン・玉ねぎ・ハーブ","魚の煮汁を白ワインと香味野菜で洋風に育てる。","west"],["ナンプラー・ライム・生姜","魚醤の発酵旨味を重ね、ライムと生姜で軽く締める。","asian"],["ナンプラー・黒糖・唐辛子","ナンプラーに少量の黒糖と唐辛子。甘辛を東南アジア方向へ。","asian"],["ナンプラー・トマト・レモングラス","トマトの酸味と魚醤の旨味、レモングラスの香り。","asian"],["ナンプラー・ココナッツミルク","魚醤の塩味と魚の旨味をココナッツミルクで包む。","asian"]];var fish=document.getElementById('fish'),mood=document.getElementById('mood'),result=document.getElementById('result'),out=document.getElementById('out');function fill(id,d,n){var h='',k,v;for(k in d){v=d[k];h+='<label class="chip"><input type="checkbox" name="'+n+'" value="'+k+'"><span>'+k+'<small>'+v[v.length-1]+'</small></span></label>'}document.getElementById(id).innerHTML=h}fill('r',R,'receive');fill('b',B,'build');fill('g',G,'finish');function vals(n){var a=[],x=document.querySelectorAll('input[name="'+n+'"]:checked'),i;for(i=0;i<x.length;i++)a.push(x[i].value);return a}function rs(n){var f=F[fish.value],v=R[n],k=fish.value+'|'+n;if(A[k])return A[k];return Math.max(50,Math.min(96,Math.round(59+16*f[0]/5*v[1]/5+15*f[1]/5*v[0]/5+8*(6-f[1])/5*v[3]/5+7*f[2]/5*v[2]/5+6*f[3]/5*v[0]/5)))}function bs(n){var f=F[fish.value],x=B[n],m=mood.value,s=46+(6-f[1])*x[0]*1.1+f[2]*x[3]*.8+f[0]*(x[2]+x[6])*.8+x[1]*.6+x[5]*1.3;if(m==='アジアン')s+=x[8]*4;if(m==='洋風')s+=x[9]*4;if(m==='ご飯に合う'||m==='おまかせ')s+=x[7]*2;if(m==='さっぱり'||m==='甘くない')s+=x[2]*2+x[6]*2;return Math.max(50,Math.min(98,Math.round(s)))}function gs(n){var f=F[fish.value],x=G[n],m=mood.value,s=48+f[0]*(x[0]+x[4])*.7+f[2]*x[2]*.7+x[1]*1.5+x[3]*.8+x[5]*.5;if(m==='アジアン')s+=x[7]*4;if(m==='洋風')s+=x[8]*4;if(m==='ご飯に合う'||m==='おまかせ')s+=x[6]*2;if(m==='さっぱり')s+=x[0]*2+x[1]*2+x[4]*2;return Math.max(50,Math.min(98,Math.round(s)))}function fl(rs1,bs1,gs1){var a=FL.slice(),m=mood.value;function p(x){var s=0;if(m==='アジアン'&&x[2]==='asian')s+=100;if(m==='洋風'&&x[2]==='west')s+=100;if(m==='さっぱり'&&(x[2]==='light'||x[2]==='asian'))s+=60;if(m==='こってり'&&x[2]==='rich')s+=80;if(m==='ご飯に合う'&&x[2]==='jp')s+=60;if(m==='酒に合う'&&(x[2]==='light'||x[2]==='asian'))s+=45;if(m==='甘くない'&&x[0].indexOf('甘辛')<0&&x[0].indexOf('黒糖')<0)s+=50;if(m==='おまかせ'&&x[2]==='jp')s+=20;if(bs1.indexOf('トマト')>=0&&(x[2]==='west'||x[2]==='asian'))s+=30;if(bs1.indexOf('ナンプラー')>=0&&x[2]==='asian')s+=50;if(bs1.indexOf('キムチ')>=0&&x[2]==='asian')s+=35;if(bs1.indexOf('味噌')>=0&&x[2]==='rich')s+=35;if(bs1.indexOf('昆布')>=0&&x[2]==='light')s+=25;if(gs1.indexOf('ライム')>=0&&x[2]==='asian')s+=30;if(gs1.indexOf('柚子皮')>=0&&x[2]==='light')s+=20;return s}return a.sort(function(x,y){return p(y)-p(x)}).slice(0,3)}function analyze(){try{var r=vals('receive'),b=vals('build'),g=vals('finish'),i;if(!r.length&&!b.length&&!g.length){r=Object.keys(R).sort(function(x,y){return rs(y)-rs(x)}).slice(0,6)}var ra=r.length?Math.round(r.reduce(function(s,n){return s+rs(n)},0)/r.length):0,ba=b.length?Math.round(b.reduce(function(s,n){return s+bs(n)},0)/b.length):0,ga=g.length?Math.round(g.reduce(function(s,n){return s+gs(n)},0)/g.length):0,total=Math.max(50,Math.min(99,(ra||82)+Math.round((ba?ba-80:0)*.28)+Math.round((ga?ga-80:0)*.18))),f=fl(r,b,g),cook=F[fish.value][4],early=r.filter(function(n){return R[n][5]>=cook+4}),late=r.filter(function(n){return R[n][5]<=cook-2});out.innerHTML='<div class="score">'+total+' / 100</div><b>'+fish.value+(r.length?' × '+r.join(' × '):'')+(b.length?' ＋ '+b.join(' ＋ '):'')+(g.length?' ／ '+g.join('・'):'')+'</b><div class="scores"><div class="mini"><b>'+(ra||'—')+'</b><small>受ける</small></div><div class="mini"><b>'+(ba||'—')+'</b><small>作る</small></div><div class="mini"><b>'+(ga||'—')+'</b><small>仕上げ</small></div></div><div class="sec"><h3>① 煮汁を受ける</h3>'+(r.length?r.map(function(n){return'<div class="item"><span class="badge">'+rs(n)+'点</span><b>'+fish.value+' × '+n+'</b><div class="muted">'+R[n][6]+'。魚の煮汁をどう受けるかで評価。</div></div>'}).join(''):'<div class="muted">選択なし</div>')+'</div><div class="sec"><h3>② 煮汁を作る</h3>'+(b.length?b.map(function(n){return'<div class="item"><span class="badge">'+bs(n)+'点</span><b>'+n+'</b><div class="muted">'+B[n][11]+'。入れる目安：'+B[n][10]+'</div></div>'}).join(''):'<div class="muted">選択なし</div>')+'</div><div class="sec"><h3>③ 仕上げる</h3>'+(g.length?g.map(function(n){return'<div class="item"><span class="badge">'+gs(n)+'点</span><b>'+n+'</b><div class="muted">'+G[n][10]+'。使う目安：'+G[n][9]+'</div></div>'}).join(''):'<div class="muted">選択なし</div>')+'</div><div class="sec"><h3>味付け候補</h3>'+f.map(function(x,j){return'<div class="flavor"><b>第'+(j+1)+'候補　'+x[0]+'</b><div class="muted">'+x[1]+'</div></div>'}).join('')+'</div><div class="sec"><h3>煮る順番</h3>'+(early.length?'<div class="step"><b>先に火を入れる</b><div class="muted">'+early.join('・')+'</div></div>':'')+(b.length?'<div class="step"><b>煮汁を作る</b><div class="muted">'+b.map(function(n){return n+'（'+B[n][10]+'）'}).join('／')+'</div></div>':'')+'<div class="step"><b>魚を入れる</b><div class="muted">約'+cook+'分を目安に、強く沸騰させ続けず煮る。</div></div>'+(late.length?'<div class="step"><b>後半に加える</b><div class="muted">'+late.join('・')+'</div></div>':'')+(g.length?'<div class="step"><b>仕上げ</b><div class="muted">'+g.map(function(n){return n+'（'+G[n][9]+'）'}).join('／')+'</div></div>':'')+'<div class="step"><b>煮汁を完成</b><div class="muted">魚を先に取り出し、必要なら残った煮汁だけを詰めてソース化する。</div></div></div>';result.classList.add('show');result.scrollIntoView(true)}catch(e){result.classList.add('show');out.innerHTML='<b>分析エラー</b><div>'+e.message+'</div>'}}document.getElementById('go').onclick=analyze;document.getElementById('clear').onclick=function(){var x=document.querySelectorAll('input[type="checkbox"]'),i;for(i=0;i<x.length;i++)x[i].checked=false;result.classList.remove('show')};document.getElementById('search').oninput=function(e){var q=e.target.value,c=document.querySelectorAll('.chip'),i;for(i=0;i<c.length;i++)c[i].classList.toggle('hidden',c[i].textContent.indexOf(q)<0)};</script></body></html>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>煮付けラボ</title><style>
+*{box-sizing:border-box}
+body{margin:0;background:#f4f2ec;color:#20231f;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;line-height:1.5}
+main{max-width:760px;margin:auto;padding:22px 14px 105px}
+h1{margin:0 0 6px;font-size:34px}
+h2{font-size:18px;margin:0 0 10px}
+.muted{color:#68706a;font-size:13px}
+.card{background:#fff;border:1px solid #dddcd5;border-radius:18px;padding:15px;margin-top:12px}
+select,input[type=search],input[type=number],input[type=text]{width:100%;font-size:16px;padding:12px;border:1px solid #dddcd5;border-radius:12px;background:#fff}
+.layer{margin-top:18px;padding-top:15px;border-top:1px solid #ecebe5}
+.layer:first-of-type{border-top:0;padding-top:0}
+.lt{font-weight:900}
+.num{display:inline-grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#e8f0ec;color:#285f50;margin-right:6px}
+.chips{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.chip{border:1px solid #dddcd5;border-radius:12px;background:#fafaf7;overflow:hidden}
+.chip input{position:absolute;opacity:0}
+.chip span{display:block;min-height:51px;padding:8px 10px;font-weight:700}
+.chip small{display:block;font-weight:400;color:#68706a;font-size:11px}
+.chip input:checked+span{background:#285f50;color:#fff}
+.chip input:checked+span small{color:#dce8e3}
+.chip input:focus-visible+span{outline:2px solid #285f50;outline-offset:-2px}
+.bar{position:fixed;left:0;right:0;bottom:0;background:#f4f2ecef;border-top:1px solid #ddd;padding:10px 14px calc(env(safe-area-inset-bottom) + 10px)}
+.bar div{max-width:760px;margin:auto;display:grid;grid-template-columns:1fr auto;gap:8px}
+.bar button{min-height:50px;border:0;border-radius:14px;font-size:16px;font-weight:800;padding:0 18px}
+.go{background:#285f50;color:#fff}
+.clear{background:#e5e4df}
+.result{display:none}
+.result.show{display:block}
+.score{font-size:38px;font-weight:900;color:#285f50}
+.scores{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}
+.mini{border:1px solid #dddcd5;border-radius:12px;padding:9px;text-align:center}
+.mini b{display:block;font-size:20px}
+.mini small{font-size:10px;color:#68706a}
+.item,.flavor,.step{border:1px solid #dddcd5;border-radius:12px;padding:10px;margin-top:8px}
+.flavor{cursor:pointer}
+.flavor.on{border-color:#285f50;background:#f2f7f4}
+.badge{float:right;background:#e8f0ec;color:#285f50;border-radius:999px;padding:3px 8px;font-size:12px}
+.warn{border:1px solid #d8b08a;background:#fbf4ea;border-radius:12px;padding:10px;margin-top:8px}
+.warn .badge{background:#f3e2cd;color:#8a5a22}
+.sec{margin-top:17px}
+.sec h3{font-size:14px}
+.hidden{display:none!important}
+.karte{margin-top:12px;border:1px solid #dddcd5;border-radius:12px;padding:10px;background:#fafaf7;font-size:13px}
+.karte .kg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:6px 0}
+.karte .kg div{text-align:center}
+.karte .kg b{display:block;font-size:15px;color:#285f50}
+.karte .kg small{font-size:10px;color:#68706a}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.lab{font-size:12px;font-weight:700;color:#454b45;margin:10px 0 4px}
+table.rec{width:100%;border-collapse:collapse;margin-top:8px;font-size:14px}
+table.rec td{padding:6px 4px;border-bottom:1px solid #ecebe5}
+table.rec td:last-child{text-align:right;font-weight:700}
+.gauge{margin-top:10px;border:1px solid #dddcd5;border-radius:12px;padding:10px;background:#fafaf7}
+.gauge b{font-size:18px;color:#285f50}
+.smallbtn{border:1px solid #dddcd5;background:#fafaf7;border-radius:10px;padding:8px 12px;font-size:13px;font-weight:700}
+.smallbtn.primary{background:#285f50;border-color:#285f50;color:#fff}
+.recrow{border:1px solid #dddcd5;border-radius:12px;padding:10px;margin-top:8px;font-size:13px}
+.recrow b{font-size:14px}
+.diffbadge{display:inline-block;background:#e8f0ec;color:#285f50;border-radius:999px;padding:2px 8px;font-size:11px;font-weight:700;margin-left:6px}
+.stars{color:#b8860b;letter-spacing:1px}
+@media(min-width:600px){.chips{grid-template-columns:repeat(3,1fr)}}
+</style></head><body><main>
+<h1>煮付けラボ</h1>
+<div class="muted">Ver.5／3レイヤー設計 ＋ 煮汁の定量設計・競合判定・実験記録</div>
+
+<section class="card"><h2>魚と方向性</h2>
+<select id="fish"><option>サバ</option><option>ブリ</option><option>鯛</option><option>タラ</option><option>カレイ</option><option>金目鯛</option><option>鮭</option><option>サワラ</option><option>アジ</option><option>イワシ</option><option>サンマ</option><option>メカジキ</option><option>メバル</option><option>カサゴ</option><option>ヒラメ</option></select>
+<div class="karte" id="karte"></div>
+<div class="row2">
+<div><div class="lab">方向性</div><select id="mood"><option>おまかせ</option><option>さっぱり</option><option>ご飯に合う</option><option>酒に合う</option><option>甘くない</option><option>こってり</option><option>洋風</option><option>アジアン</option></select></div>
+<div><div class="lab">魚の量（g）</div><input type="number" id="weight" value="200" min="50" max="1500" step="50"></div>
+</div>
+</section>
+
+<section class="card"><h2>料理を3層で組み立てる</h2>
+<input id="search" type="search" placeholder="全素材から絞り込み">
+<div class="layer"><div class="lt"><span class="num">1</span>煮汁を受ける</div><div class="muted">魚の旨味・脂・煮汁を含ませる素材</div><div class="chips" id="r"></div></div>
+<div class="layer"><div class="lt"><span class="num">2</span>煮汁を作る</div><div class="muted">旨味・甘味・酸味・発酵・香りで煮汁を設計</div><div class="chips" id="b"></div></div>
+<div class="layer"><div class="lt"><span class="num">3</span>仕上げる</div><div class="muted">酸味・香り・辛味・食感で最後の輪郭を作る</div><div class="chips" id="g"></div></div>
+</section>
+
+<section class="card result" id="result"><div id="out"></div></section>
+
+<section class="card" id="records"><h2>実験記録</h2><div class="muted">分析結果を保存して、次は1要素だけ変えて比較する（一因子実験）。記録はこの端末のブラウザに保存されます。</div><div id="reclist"></div></section>
+</main>
+
+<div class="bar"><div><button type="button" class="go" id="go">料理を分析</button><button type="button" class="clear" id="clear">クリア</button></div></div>
+
+<script>
+/* ===== 既存データ（Ver.4） ===== */
+var F={"サバ":[5,5,5,3,8],"ブリ":[5,4,4,4,9],"鯛":[2,3,2,4,8],"タラ":[1,2,2,2,7],"カレイ":[2,3,2,5,8],"金目鯛":[4,4,3,5,9],"鮭":[4,4,3,2,8],"サワラ":[3,3,2,2,7],"アジ":[3,4,4,2,7],"イワシ":[4,5,5,3,6],"サンマ":[5,4,5,2,7],"メカジキ":[3,3,2,1,9],"メバル":[2,4,2,5,9],"カサゴ":[2,4,3,5,9],"ヒラメ":[1,3,1,4,7]};
+var R={"大根":[5,3,3,2,1,18,"吸う"],"かぶ":[4,2,4,2,1,10,"淡い"],"茄子":[5,5,2,2,1,9,"脂を吸う"],"白菜":[5,4,4,2,1,8,"甘味"],"じゃがいも":[3,3,3,2,1,16,"ボディ"],"里芋":[4,3,3,2,1,17,"とろみ"],"れんこん":[3,2,3,2,2,14,"食感"],"冬瓜":[5,2,2,1,1,13,"吸う"],"豆腐":[5,3,1,2,1,5,"吸う"],"厚揚げ":[4,4,1,3,2,7,"コク"],"キャベツ":[4,4,5,2,1,8,"甘味"],"にんじん":[2,2,5,2,2,15,"甘味"],"ピーマン":[3,4,2,2,4,5,"青い香り"],"ズッキーニ":[4,4,2,2,1,7,"吸う"],"たけのこ":[2,2,2,3,3,10,"食感"],"小松菜":[3,3,2,2,2,3,"青菜"],"長芋":[3,2,2,2,1,8,"食感"],"こんにゃく":[3,1,0,0,1,12,"食感"],"オクラ":[2,2,1,2,1,3,"とろみ"],"ゴーヤ":[2,2,0,1,5,5,"苦味"],"はんぺん":[4,2,2,3,1,3,"吸う"],"モロヘイヤ":[3,2,1,2,2,2,"とろみ"],"エリンギ":[2,2,1,3,2,8,"食感"],"チンゲン菜":[3,3,3,2,2,5,"青菜"],"もやし":[4,2,1,1,1,3,"食感"],"レタス":[3,2,2,1,1,2,"軽さ"],"油揚げ":[5,5,1,3,2,5,"吸う・コク"],"車麩":[5,3,2,2,1,9,"吸う"],"焼き麩":[5,2,2,2,1,4,"吸う"],"春雨":[5,2,1,1,1,5,"吸う"],"餅":[3,2,4,1,1,8,"ボディ"],"卵":[2,3,2,3,1,6,"まろやか"],"ゆで卵":[3,3,2,3,1,8,"味を含む"]};
+var B={"玉ねぎ":[3,5,1,3,0,0,1,3,2,4,"前半","甘味"],"長ねぎ":[2,4,1,4,0,0,2,5,2,2,"前半","甘味・香味"],"ごぼう":[3,2,0,5,0,0,1,5,1,1,"前半","土の香り"],"トマト":[5,3,5,4,0,0,4,1,4,5,"中盤","酸味・旨味"],"しいたけ":[5,1,0,4,0,0,1,5,2,3,"前半","旨味・香り"],"まいたけ":[5,1,0,5,0,0,1,4,2,4,"前半","旨味・香り"],"えのき":[4,1,0,2,0,0,1,4,2,3,"中盤","旨味・とろみ"],"しめじ":[4,1,0,3,0,0,1,4,2,4,"前半","旨味"],"干し椎茸":[5,2,0,5,0,0,1,5,2,2,"最初","濃い旨味"],"セロリ":[2,2,1,5,0,0,3,1,3,5,"前半","香味"],"にんにく":[2,1,0,5,0,0,2,2,5,5,"前半","香味"],"生姜":[1,1,0,5,0,0,4,5,4,2,"前半","香味"],"昆布":[5,1,0,2,1,0,0,5,1,1,"最初","だし・旨味"],"塩昆布":[5,1,0,3,5,0,1,5,1,1,"後半","塩味・旨味"],"キムチ":[4,2,4,5,4,5,4,1,5,1,"後半","発酵・辛味"],"納豆":[5,1,1,5,1,5,1,5,2,1,"仕上げ〜弱火","発酵・旨味"],"梅干し":[2,1,5,4,4,2,5,5,2,1,"中盤","酸味・塩味"],"ザーサイ":[3,1,2,4,4,3,2,2,5,1,"後半","塩味・発酵"],"高菜漬け":[3,1,2,4,4,4,2,4,3,1,"後半","発酵・塩味"],"豆豉":[5,1,1,5,5,5,1,1,5,1,"前半少量","発酵・塩味"],"豆板醤":[2,1,2,5,4,4,3,1,5,1,"前半少量","辛味・発酵"],"コチュジャン":[3,3,2,4,4,4,2,1,4,1,"中盤","甘辛・発酵"],"味噌":[5,2,1,4,4,4,1,5,1,1,"後半","旨味・発酵"],"白味噌":[4,5,1,3,3,3,1,5,1,1,"後半","甘味・発酵"],"酒粕":[4,3,2,5,1,5,1,5,1,1,"後半","発酵・香り"],"甘酒":[3,5,1,2,1,3,1,5,1,1,"中盤","甘味・発酵"],"ナンプラー":[5,1,1,5,5,5,2,1,5,1,"中盤少量","魚醤・発酵"],"オイスターソース":[5,3,1,4,4,2,1,1,4,1,"中盤少量","旨味・コク"],"ココナッツミルク":[2,4,1,4,0,0,1,1,5,2,"後半","コク・甘い香り"],"ヨーグルト":[2,2,4,3,0,3,3,1,2,4,"後半弱火","酸味・乳酸"],"あさり":[5,1,1,4,2,0,1,2,3,5,"前半","貝旨味"],"しじみ":[5,1,1,3,2,0,1,4,2,3,"前半","貝旨味"],"桜えび":[5,2,0,5,2,0,1,4,3,2,"前半少量","甲殻類旨味"],"干しえび":[5,1,0,5,4,0,1,2,5,2,"前半少量","甲殻類旨味"],"わかめ":[3,1,0,3,2,1,1,5,2,1,"後半","海藻旨味"],"ひじき":[3,1,1,3,3,0,1,5,1,1,"中盤","海藻・食感"],"もずく":[2,1,4,2,2,2,4,4,2,1,"仕上げ","酸味・海藻"],"めかぶ":[3,1,1,3,2,1,1,5,2,1,"仕上げ","海藻・とろみ"]};
+var G={"海苔":[1,3,5,0,0,2,5,2,1,"仕上げ","磯香・旨味"],"とろろ昆布":[1,2,3,0,1,3,5,1,1,"仕上げ","旨味・とろみ"],"青のり":[1,3,5,0,0,1,5,2,1,"仕上げ","磯香"],"青ねぎ":[2,4,4,1,0,3,5,3,1,"仕上げ","青い香り"],"大葉":[3,5,5,0,0,2,5,2,1,"仕上げ","爽やか"],"みょうが":[4,5,5,1,0,3,5,3,1,"仕上げ","爽やか・辛味"],"三つ葉":[2,4,5,0,0,2,5,1,1,"仕上げ","和の香り"],"柚子皮":[3,5,5,0,2,1,5,2,2,"仕上げ","柑橘香"],"すだち":[5,5,4,0,5,1,5,2,1,"仕上げ","酸味・柑橘"],"レモン":[5,5,4,0,5,1,2,3,5,"仕上げ","酸味・柑橘"],"ライム":[5,5,5,0,5,1,1,5,3,"仕上げ","酸味・柑橘"],"オレンジ皮":[2,4,5,0,2,1,1,2,5,"仕上げ","甘い柑橘香"],"パクチー":[2,5,5,0,0,2,1,5,1,"仕上げ","アジアン香"],"ミント":[4,5,5,0,0,2,1,5,3,"仕上げ","清涼感"],"タイバジル":[2,4,5,1,0,2,1,5,3,"仕上げ","甘い香り"],"ディル":[3,5,5,0,0,2,1,2,5,"仕上げ","ハーブ"],"タイム":[1,3,5,0,0,1,1,1,5,"仕上げ少量","ハーブ"],"パセリ":[1,4,4,0,0,2,1,1,5,"仕上げ","ハーブ"],"粉山椒":[4,3,5,4,0,1,5,2,1,"仕上げ","痺れ・香り"],"花椒":[4,3,5,5,0,1,1,5,1,"仕上げ","痺れ・香り"],"黒胡椒":[2,2,4,4,0,1,1,2,5,"仕上げ","辛味・香り"],"白胡椒":[1,2,3,3,0,1,2,3,4,"仕上げ","辛味"],"唐辛子":[3,2,3,5,0,1,3,5,2,"仕上げ/中盤","辛味"],"七味":[3,3,5,4,0,2,5,2,1,"仕上げ","複合香辛料"],"クミン":[2,2,5,1,0,1,1,4,4,"仕上げ少量","スパイス"],"白ごま":[1,1,3,0,0,4,4,3,1,"仕上げ","香ばしさ"],"フライドオニオン":[1,1,4,0,0,5,1,5,4,"仕上げ","香ばしさ・食感"]};
+var A={"ブリ|大根":97,"鯛|かぶ":95,"サバ|茄子":94,"タラ|白菜":91,"タラ|じゃがいも":90,"鮭|キャベツ":92,"金目鯛|大根":96,"メバル|豆腐":92,"カサゴ|大根":93,"サワラ|かぶ":91,"アジ|茄子":91,"サンマ|大根":92,"鯛|冬瓜":93,"鯛|白菜":90,"ブリ|里芋":91,"カレイ|豆腐":93,"鮭|じゃがいも":91,"サバ|大根":91,"ヒラメ|かぶ":92};
+
+/* ===== Ver.5 追加：調味料テーブル（1単位あたり 塩分g／糖分g／単位／煮汁の液量に数えるか） ===== */
+var S={
+"水":[0,0,"ml",1],"酒":[0,.02,"ml",1],"みりん":[0,.43,"ml",1],"濃口醤油":[.16,.04,"ml",1],"薄口醤油":[.19,.03,"ml",1],
+"砂糖":[0,1,"g",0],"黒糖":[0,.9,"g",0],"塩":[1,0,"g",0],"味噌":[.12,.15,"g",0],"白だし":[.14,.02,"ml",1],
+"黒酢":[0,.02,"ml",1],"白ワイン":[0,.02,"ml",1],"ナンプラー":[.23,.02,"ml",1],"トマト缶":[0,.035,"g",1],
+"ココナッツミルク":[0,.025,"ml",1],"生姜スライス":[0,0,"g",0],"昆布":[0,0,"g",0],"オリーブ油":[0,0,"ml",0],"唐辛子":[0,0,"g",0]
+};
+
+/* ===== 味付け候補（説明＋魚100gあたりの基準配合） ===== */
+var FL=[
+{n:"王道・甘辛醤油",d:"醤油・酒・みりん・砂糖。魚の旨味を受けた煮汁を素材に含ませる基準の味。",t:"jp",rec:[["水",45],["酒",20],["みりん",15],["濃口醤油",13],["砂糖",3]]},
+{n:"甘さ控えめ・醤油酒生姜",d:"醤油・酒・生姜を軸に甘味を控える。",t:"jp",rec:[["水",55],["酒",25],["濃口醤油",12],["生姜スライス",4]]},
+{n:"生姜強め・甘辛醤油",d:"王道甘辛に生姜を強めに効かせる。",t:"jp",rec:[["水",45],["酒",20],["みりん",15],["濃口醤油",13],["砂糖",3],["生姜スライス",6]]},
+{n:"塩・酒・柑橘",d:"魚の出汁を前に出し、最後の酸味で締める。",t:"light",rec:[["水",60],["酒",30],["塩",1.8]]},
+{n:"黒酢・生姜・醤油",d:"脂を黒酢で切り、生姜で香りを整える。",t:"light",rec:[["水",45],["酒",15],["黒酢",12],["濃口醤油",12],["砂糖",2],["生姜スライス",3]]},
+{n:"味噌・生姜",d:"旨味とコクを足し、根菜や豆腐にも味を渡す。",t:"rich",rec:[["水",55],["酒",20],["みりん",10],["味噌",16],["生姜スライス",3]]},
+{n:"トマト・白だし",d:"酸味と旨味を重ね、魚の脂を軽くまとめる。",t:"west",rec:[["トマト缶",60],["水",30],["白だし",12],["酒",15],["塩",0.6]]},
+{n:"薄口醤油・昆布・山椒",d:"繊細な白身を壊さず旨味と香りを補う。",t:"light",rec:[["水",65],["酒",20],["薄口醤油",10],["昆布",2]]},
+{n:"白ワイン・玉ねぎ・ハーブ",d:"魚の煮汁を白ワインと香味野菜で洋風に育てる。",t:"west",rec:[["白ワイン",40],["水",40],["塩",1.7],["オリーブ油",3]]},
+{n:"ナンプラー・ライム・生姜",d:"魚醤の発酵旨味を重ね、ライムと生姜で軽く締める。",t:"asian",rec:[["水",60],["酒",15],["ナンプラー",8],["砂糖",2],["生姜スライス",3]]},
+{n:"ナンプラー・黒糖・唐辛子",d:"ナンプラーに少量の黒糖と唐辛子。甘辛を東南アジア方向へ。",t:"asian",rec:[["水",60],["酒",15],["ナンプラー",8],["黒糖",4],["唐辛子",0.5]]},
+{n:"ナンプラー・トマト・レモングラス",d:"トマトの酸味と魚醤の旨味、レモングラスの香り。",t:"asian",rec:[["トマト缶",50],["水",35],["ナンプラー",8],["砂糖",2]]},
+{n:"ナンプラー・ココナッツミルク",d:"魚醤の塩味と魚の旨味をココナッツミルクで包む。",t:"asian",rec:[["ココナッツミルク",50],["水",30],["ナンプラー",8],["砂糖",2]]}
+];
+
+var fish=document.getElementById('fish'),mood=document.getElementById('mood'),weight=document.getElementById('weight'),result=document.getElementById('result'),out=document.getElementById('out');
+
+function fill(id,d,n){var h='',k,v;for(k in d){v=d[k];h+='<label class="chip"><input type="checkbox" name="'+n+'" value="'+k+'"><span>'+k+'<small>'+v[v.length-1]+'</small></span></label>'}document.getElementById(id).innerHTML=h}
+fill('r',R,'receive');fill('b',B,'build');fill('g',G,'finish');
+function vals(n){var a=[],x=document.querySelectorAll('input[name="'+n+'"]:checked'),i;for(i=0;i<x.length;i++)a.push(x[i].value);return a}
+
+/* ===== 既存スコア（Ver.4のまま） ===== */
+function rs(n){var f=F[fish.value],v=R[n],k=fish.value+'|'+n;if(A[k])return A[k];return Math.max(50,Math.min(96,Math.round(59+16*f[0]/5*v[1]/5+15*f[1]/5*v[0]/5+8*(6-f[1])/5*v[3]/5+7*f[2]/5*v[2]/5+6*f[3]/5*v[0]/5)))}
+function bs(n){var f=F[fish.value],x=B[n],m=mood.value,s=46+(6-f[1])*x[0]*1.1+f[2]*x[3]*.8+f[0]*(x[2]+x[6])*.8+x[1]*.6+x[5]*1.3;if(m==='アジアン')s+=x[8]*4;if(m==='洋風')s+=x[9]*4;if(m==='ご飯に合う'||m==='おまかせ')s+=x[7]*2;if(m==='さっぱり'||m==='甘くない')s+=x[2]*2+x[6]*2;return Math.max(50,Math.min(98,Math.round(s)))}
+function gs(n){var f=F[fish.value],x=G[n],m=mood.value,s=48+f[0]*(x[0]+x[4])*.7+f[2]*x[2]*.7+x[1]*1.5+x[3]*.8+x[5]*.5;if(m==='アジアン')s+=x[7]*4;if(m==='洋風')s+=x[8]*4;if(m==='ご飯に合う'||m==='おまかせ')s+=x[6]*2;if(m==='さっぱり')s+=x[0]*2+x[1]*2+x[4]*2;return Math.max(50,Math.min(98,Math.round(s)))}
+function fl(rs1,bs1,gs1){var a=FL.slice(),m=mood.value;function p(x){var s=0;if(m==='アジアン'&&x.t==='asian')s+=100;if(m==='洋風'&&x.t==='west')s+=100;if(m==='さっぱり'&&(x.t==='light'||x.t==='asian'))s+=60;if(m==='こってり'&&x.t==='rich')s+=80;if(m==='ご飯に合う'&&x.t==='jp')s+=60;if(m==='酒に合う'&&(x.t==='light'||x.t==='asian'))s+=45;if(m==='甘くない'&&x.n.indexOf('甘辛')<0&&x.n.indexOf('黒糖')<0)s+=50;if(m==='おまかせ'&&x.t==='jp')s+=20;if(bs1.indexOf('トマト')>=0&&(x.t==='west'||x.t==='asian'))s+=30;if(bs1.indexOf('ナンプラー')>=0&&x.t==='asian')s+=50;if(bs1.indexOf('キムチ')>=0&&x.t==='asian')s+=35;if(bs1.indexOf('味噌')>=0&&x.t==='rich')s+=35;if(bs1.indexOf('昆布')>=0&&x.t==='light')s+=25;if(gs1.indexOf('ライム')>=0&&x.t==='asian')s+=30;if(gs1.indexOf('柚子皮')>=0&&x.t==='light')s+=20;return s}return a.sort(function(x,y){return p(y)-p(x)}).slice(0,3)}
+
+/* ===== Ver.5 追加①：魚カルテ ===== */
+function renderKarte(){
+var f=F[fish.value],h='';
+var pre = f[2]>=4?'霜降り必須（80℃の湯にくぐらせて冷水、血合いを洗う）':(f[2]===3?'霜降り推奨（湯通し→冷水）':'塩を振って10分おき、水気を拭くだけでOK');
+var frag = f[3]<=2?'身が崩れやすい：途中で返さない・落とし蓋・取り出しはフライ返しで':'身はしっかりめ：多少煮汁を対流させても崩れにくい';
+var tg=target();
+h+='<div class="kg"><div><b>'+f[0]+'</b><small>脂</small></div><div><b>'+f[1]+'</b><small>旨味</small></div><div><b>'+f[2]+'</b><small>臭み</small></div><div><b>'+f[3]+'</b><small>身質</small></div></div>';
+h+='<div>下処理：'+pre+'</div><div>'+frag+'</div>';
+h+='<div>加熱目安：約'+f[4]+'分／推奨煮汁塩分：'+tg[0].toFixed(1)+'〜'+tg[1].toFixed(1)+'%'+(f[0]>=4?'（脂が強いのでやや濃いめ・酸との相性◎）':'')+'</div>';
+document.getElementById('karte').innerHTML=h;
+}
+function target(){
+var f=F[fish.value], r=vals('receive');
+var lo=1.8, hi=2.2, note='煮詰めて絡める前提の濃度';
+if(r.length>=1){lo=1.2;hi=1.6;note='受け素材に含ませる前提。煮汁多め・薄めで長めに含ませる'}
+if(f[0]>=4){lo+=0.2;hi+=0.2}
+return [lo,hi,note];
+}
+
+/* ===== Ver.5 追加②：煮汁の定量計算 ===== */
+var chosenFlavor=0, lastCandidates=[];
+function calcRecipe(fx){
+var w=Math.max(50,parseFloat(weight.value)||200), r=vals('receive');
+var scale=w/100;
+var rows=[], salt=0, sugar=0, liquid=0, extraWater=r.length?40*scale:0;
+fx.rec.forEach(function(it){
+  var name=it[0], amt=it[1]*scale, s=S[name]||[0,0,'g',0];
+  if(name==='水')amt+=extraWater;
+  salt+=amt*s[0]; sugar+=amt*s[1]; if(s[3])liquid+=amt;
+  rows.push([name, amt, s[2]]);
+});
+if(extraWater && !fx.rec.some(function(it){return it[0]==='水'})){rows.unshift(['水',extraWater,'ml']);liquid+=extraWater}
+var sp=liquid>0?salt/(liquid+ (sugar*0.5))*100:0; /* 溶質の一部を分母に加味した近似 */
+var gp=liquid>0?sugar/(liquid+(sugar*0.5))*100:0;
+return {rows:rows, salt:sp, sugar:gp, w:w};
+}
+function fmtAmt(v,u){if(u==='ml'){return (v>=20?Math.round(v/5)*5:Math.round(v))+' ml'}return (v>=5?Math.round(v):Math.round(v*2)/2)+' g'}
+function recipeHTML(fx){
+var c=calcRecipe(fx), tg=target(), judge, tip='';
+if(c.salt<tg[0]-0.05){judge='薄め';tip='醤油や塩を1〜2割足すか、最後に煮汁だけをしっかり詰める'}
+else if(c.salt>tg[1]+0.05){judge='濃いめ';tip='水か酒を1〜2割足す'}
+else{judge='適正';tip=tg[2]}
+var h='<div class="lab">配合（魚 '+c.w+'g'+(vals('receive').length?'＋受け素材':'')+'）</div><table class="rec">';
+c.rows.forEach(function(rw){h+='<tr><td>'+rw[0]+'</td><td>'+fmtAmt(rw[1],rw[2])+'</td></tr>'});
+h+='</table><div class="gauge">煮汁塩分 <b>'+c.salt.toFixed(1)+'%</b> ／ 糖分 <b>'+c.sugar.toFixed(1)+'%</b>　→ <b>'+judge+'</b><div class="muted">目標 '+tg[0].toFixed(1)+'〜'+tg[1].toFixed(1)+'%。'+tip+'</div></div>';
+return h;
+}
+
+/* ===== Ver.5 追加③：競合判定（減点） ===== */
+function conflicts(r,b,g){
+var f=F[fish.value], m=mood.value, out=[];
+var all=b.concat(g);
+function cnt(list,set){return list.filter(function(n){return set.indexOf(n)>=0}).length}
+var acid=['すだち','レモン','ライム','梅干し','ヨーグルト','もずく','トマト'];
+var ferm=['キムチ','豆豉','豆板醤','コチュジャン','ナンプラー','納豆','高菜漬け','ザーサイ','酒粕'];
+var strong=['キムチ','豆板醤','豆豉','コチュジャン','にんにく'];
+var herbs=['大葉','みょうが','三つ葉','パクチー','ミント','タイバジル','ディル','タイム','パセリ'];
+var waCitrus=['柚子皮','すだち'], westHerb=['ディル','タイム','パセリ'];
+var sweet=['白味噌','甘酒','ココナッツミルク','コチュジャン'];
+var na=cnt(all,acid); if(na>=3)out.push(['酸味が渋滞（'+na+'種）。主役の酸を1つに絞ると輪郭が出る',5]);
+var nf=cnt(b,ferm); if(nf>=3)out.push(['発酵素材が'+nf+'種。旨味は重なるが香りが濁りやすい。2種までが目安',6]);
+if(f[0]<=2&&f[2]<=2&&cnt(b,strong)>0)out.push([fish.value+'は淡白なので、'+b.filter(function(n){return strong.indexOf(n)>=0}).join('・')+'に風味が負けやすい。量を通常の半分に',5]);
+var nh=cnt(g,herbs); if(nh>=3)out.push(['仕上げの香草が'+nh+'種。香りの主役を1〜2つに',4]);
+if(cnt(g,waCitrus)>0&&cnt(g,westHerb)>0)out.push(['和柑橘×洋ハーブは方向性が割れやすい。どちらかに寄せる',3]);
+if(m==='甘くない'&&cnt(b,sweet)>0)out.push(['「甘くない」指定に対し甘味の強い素材（'+b.filter(function(n){return sweet.indexOf(n)>=0}).join('・')+'）が入っている',3]);
+if(b.indexOf('ヨーグルト')>=0&&(b.indexOf('梅干し')>=0||b.indexOf('トマト')>=0))out.push(['ヨーグルトは強い酸と合わせると分離しやすい。火を止めてから加える',3]);
+if(f[3]<=2){var longR=r.filter(function(n){return R[n][5]>=14});if(longR.length)out.push([longR.join('・')+'は加熱が長く、'+fish.value+'は崩れやすい。先に下茹でし、魚は後入れに（減点なし）',0])}
+return out;
+}
+
+/* ===== Ver.5 追加④：記録（localStorage）＋一因子実験判定 ===== */
+function store(){try{return JSON.parse(localStorage.getItem('nitukelab_records')||'[]')}catch(e){return []}}
+function saveStore(a){try{localStorage.setItem('nitukelab_records',JSON.stringify(a));return true}catch(e){return false}}
+function diffOf(a,b){
+if(!b)return null;
+var ch=[];
+if(a.fish!==b.fish)ch.push('魚:'+b.fish+'→'+a.fish);
+if(a.mood!==b.mood)ch.push('方向性:'+b.mood+'→'+a.mood);
+if(a.fl!==b.fl)ch.push('味付け:'+b.fl+'→'+a.fl);
+['r','b','g'].forEach(function(k){
+  var add=a[k].filter(function(x){return b[k].indexOf(x)<0}),del=b[k].filter(function(x){return a[k].indexOf(x)<0});
+  add.forEach(function(x){ch.push('＋'+x)});del.forEach(function(x){ch.push('−'+x)});
+});
+return ch;
+}
+function renderRecords(){
+var a=store(),h='';
+if(!a.length){h='<div class="muted" style="margin-top:8px">まだ記録がありません。分析結果の「この構成を保存」から追加できます。</div>'}
+a.slice().reverse().forEach(function(rec,ri){
+  var idx=a.length-1-ri, prev=idx>0?a[idx-1]:null, d=diffOf(rec,prev);
+  var badge=d===null?'<span class="diffbadge">初回</span>':(d.length===0?'<span class="diffbadge">同一構成</span>':(d.length===1?'<span class="diffbadge">一因子実験 ✓</span>':'<span class="diffbadge">'+d.length+'因子変更</span>'));
+  h+='<div class="recrow"><b>'+rec.fish+'（'+rec.mood+'）'+rec.score+'点</b>'+badge+
+  '<div class="muted">'+new Date(rec.t).toLocaleString('ja-JP')+'／'+rec.fl+'</div>'+
+  (rec.r.length||rec.b.length||rec.g.length?'<div class="muted">'+[].concat(rec.r,rec.b,rec.g).join('・')+'</div>':'')+
+  (d&&d.length?'<div class="muted">変更点：'+d.join('、')+'</div>':'')+
+  (rec.stars?'<div class="stars">'+'★'.repeat(rec.stars)+'☆'.repeat(5-rec.stars)+'</div>':'')+
+  (rec.memo?'<div>'+rec.memo+'</div>':'')+
+  '<div style="margin-top:6px"><button type="button" class="smallbtn" onclick="loadRec('+idx+')">読み込む</button> <button type="button" class="smallbtn" onclick="delRec('+idx+')">削除</button></div></div>';
+});
+document.getElementById('reclist').innerHTML=h;
+}
+function loadRec(i){
+var a=store(),rec=a[i];if(!rec)return;
+fish.value=rec.fish;mood.value=rec.mood;weight.value=rec.w||200;
+document.querySelectorAll('input[type="checkbox"]').forEach(function(x){x.checked=(rec[{receive:'r',build:'b',finish:'g'}[x.name]]||[]).indexOf(x.value)>=0});
+renderKarte();analyze();window.scrollTo({top:0});
+}
+function delRec(i){var a=store();a.splice(i,1);saveStore(a);renderRecords()}
+function saveCurrent(){
+var memo=document.getElementById('memo')?document.getElementById('memo').value:'';
+var stars=document.getElementById('stars')?parseInt(document.getElementById('stars').value)||0:0;
+var rec={t:Date.now(),fish:fish.value,mood:mood.value,w:parseFloat(weight.value)||200,r:vals('receive'),b:vals('build'),g:vals('finish'),fl:lastCandidates[chosenFlavor]?lastCandidates[chosenFlavor].n:'',score:lastScore,memo:memo,stars:stars};
+var a=store();a.push(rec);
+if(saveStore(a)){renderRecords();document.getElementById('savemsg').textContent='保存しました'}
+else{document.getElementById('savemsg').textContent='この環境ではブラウザ保存が使えません'}
+}
+
+/* ===== Ver.5 追加⑤：URL共有 ===== */
+function shareURL(){
+var st={f:fish.value,m:mood.value,w:weight.value,r:vals('receive'),b:vals('build'),g:vals('finish')};
+var url=location.origin+location.pathname+'#'+encodeURIComponent(JSON.stringify(st));
+function done(){document.getElementById('sharemsg').textContent='リンクをコピーしました'}
+if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(done,function(){prompt('このURLをコピー',url)})}
+else{prompt('このURLをコピー',url)}
+}
+function restoreHash(){
+if(!location.hash||location.hash.length<3)return false;
+try{
+var st=JSON.parse(decodeURIComponent(location.hash.slice(1)));
+if(st.f&&F[st.f])fish.value=st.f;
+if(st.m)mood.value=st.m;
+if(st.w)weight.value=st.w;
+document.querySelectorAll('input[type="checkbox"]').forEach(function(x){x.checked=(st[{receive:'r',build:'b',finish:'g'}[x.name]]||[]).indexOf(x.value)>=0});
+return true;
+}catch(e){return false}
+}
+
+/* ===== 分析（Ver.4ベース＋Ver.5拡張） ===== */
+var lastScore=0;
+function flavorSection(){
+var h='<div class="sec"><h3>味付け候補（タップで配合を切替）</h3>';
+lastCandidates.forEach(function(x,j){h+='<div class="flavor'+(j===chosenFlavor?' on':'')+'" onclick="pickFlavor('+j+')"><b>第'+(j+1)+'候補　'+x.n+'</b><div class="muted">'+x.d+'</div></div>'});
+h+='</div><div class="sec" id="recipebox">'+recipeHTML(lastCandidates[chosenFlavor])+'</div>';
+return h;
+}
+function pickFlavor(j){chosenFlavor=j;
+document.querySelectorAll('.flavor').forEach(function(el,i){el.classList.toggle('on',i===j)});
+document.getElementById('recipebox').innerHTML=recipeHTML(lastCandidates[j]);
+}
+function analyze(){try{
+var r=vals('receive'),b=vals('build'),g=vals('finish');
+if(!r.length&&!b.length&&!g.length){r=Object.keys(R).sort(function(x,y){return rs(y)-rs(x)}).slice(0,6)}
+var ra=r.length?Math.round(r.reduce(function(s,n){return s+rs(n)},0)/r.length):0,
+    ba=b.length?Math.round(b.reduce(function(s,n){return s+bs(n)},0)/b.length):0,
+    ga=g.length?Math.round(g.reduce(function(s,n){return s+gs(n)},0)/g.length):0,
+    base=Math.max(50,Math.min(99,(ra||82)+Math.round((ba?ba-80:0)*.28)+Math.round((ga?ga-80:0)*.18)));
+var cf=conflicts(r,b,g), pen=cf.reduce(function(s,c){return s+c[1]},0);
+var total=Math.max(40,base-pen);
+lastScore=total;
+lastCandidates=fl(r,b,g);chosenFlavor=0;
+var cook=F[fish.value][4],
+    early=r.filter(function(n){return R[n][5]>=cook+4}),
+    late=r.filter(function(n){return R[n][5]<=cook-2});
+var h='<div class="score">'+total+' / 100'+(pen?'<small style="font-size:14px;color:#8a5a22">（構成 '+base+' − 注意 '+pen+'）</small>':'')+'</div>'+
+'<b>'+fish.value+(r.length?' × '+r.join(' × '):'')+(b.length?' ＋ '+b.join(' ＋ '):'')+(g.length?' ／ '+g.join('・'):'')+'</b>'+
+'<div class="scores"><div class="mini"><b>'+(ra||'—')+'</b><small>受ける</small></div><div class="mini"><b>'+(ba||'—')+'</b><small>作る</small></div><div class="mini"><b>'+(ga||'—')+'</b><small>仕上げ</small></div></div>';
+if(cf.length){h+='<div class="sec"><h3>注意（競合判定）</h3>'+cf.map(function(c){return'<div class="warn">'+(c[1]?'<span class="badge">−'+c[1]+'点</span>':'<span class="badge">手順注意</span>')+c[0]+'</div>'}).join('')+'</div>'}
+h+='<div class="sec"><h3>① 煮汁を受ける</h3>'+(r.length?r.map(function(n){return'<div class="item"><span class="badge">'+rs(n)+'点</span><b>'+fish.value+' × '+n+'</b><div class="muted">'+R[n][6]+'。魚の煮汁をどう受けるかで評価。</div></div>'}).join(''):'<div class="muted">選択なし</div>')+'</div>'+
+'<div class="sec"><h3>② 煮汁を作る</h3>'+(b.length?b.map(function(n){return'<div class="item"><span class="badge">'+bs(n)+'点</span><b>'+n+'</b><div class="muted">'+B[n][11]+'。入れる目安：'+B[n][10]+'</div></div>'}).join(''):'<div class="muted">選択なし</div>')+'</div>'+
+'<div class="sec"><h3>③ 仕上げる</h3>'+(g.length?g.map(function(n){return'<div class="item"><span class="badge">'+gs(n)+'点</span><b>'+n+'</b><div class="muted">'+G[n][10]+'。使う目安：'+G[n][9]+'</div></div>'}).join(''):'<div class="muted">選択なし</div>')+'</div>'+
+flavorSection()+
+'<div class="sec"><h3>煮る順番</h3>'+
+(early.length?'<div class="step"><b>先に火を入れる</b><div class="muted">'+early.join('・')+'</div></div>':'')+
+(b.length?'<div class="step"><b>煮汁を作る</b><div class="muted">'+b.map(function(n){return n+'（'+B[n][10]+'）'}).join('／')+'</div></div>':'')+
+'<div class="step"><b>魚を入れる</b><div class="muted">約'+cook+'分を目安に、強く沸騰させ続けず煮る。</div></div>'+
+(late.length?'<div class="step"><b>後半に加える</b><div class="muted">'+late.join('・')+'</div></div>':'')+
+(g.length?'<div class="step"><b>仕上げ</b><div class="muted">'+g.map(function(n){return n+'（'+G[n][9]+'）'}).join('／')+'</div></div>':'')+
+'<div class="step"><b>煮汁を完成</b><div class="muted">魚を先に取り出し、必要なら残った煮汁だけを詰めてソース化する。</div></div></div>'+
+'<div class="sec"><h3>記録・共有</h3><input type="text" id="memo" placeholder="実食メモ（例：黒酢が効きすぎ、次は半量）"><div class="row2"><select id="stars"><option value="0">実食評価（未）</option><option value="1">★1</option><option value="2">★2</option><option value="3">★3</option><option value="4">★4</option><option value="5">★5</option></select><button type="button" class="smallbtn primary" onclick="saveCurrent()">この構成を保存</button></div><div style="margin-top:8px"><button type="button" class="smallbtn" onclick="shareURL()">共有リンクをコピー</button> <span class="muted" id="sharemsg"></span><span class="muted" id="savemsg"></span></div></div>';
+out.innerHTML=h;
+result.classList.add('show');result.scrollIntoView(true);
+}catch(e){result.classList.add('show');out.innerHTML='<b>分析エラー</b><div>'+e.message+'</div>'}}
+
+document.getElementById('go').onclick=analyze;
+document.getElementById('clear').onclick=function(){var x=document.querySelectorAll('input[type="checkbox"]'),i;for(i=0;i<x.length;i++)x[i].checked=false;result.classList.remove('show');history.replaceState(null,'',location.pathname)};
+document.getElementById('search').oninput=function(e){var q=e.target.value,c=document.querySelectorAll('.chip'),i;for(i=0;i<c.length;i++)c[i].classList.toggle('hidden',c[i].textContent.indexOf(q)<0)};
+fish.onchange=renderKarte;
+document.querySelector('main').addEventListener('change',function(e){if(e.target.name==='receive')renderKarte()});
+renderKarte();renderRecords();
+if(restoreHash()){renderKarte();analyze()}
+</script></body></html>
